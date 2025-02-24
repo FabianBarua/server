@@ -5,107 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FORM - TEST</title>
 
-    <!-- CDN para React, ReactDOM y Babel -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.26.0/babel.min.js"></script>
-
-    <!-- CDN de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   
   <body class="flex justify-center items-center h-screen">
-
-    <div class=" w-full h-full flex-1 " id="root"></div>
+    <div class="w-full h-full flex-1" id="root"></div>
 
     <script type="text/babel">
       const { useState, useRef, useEffect } = React;
-
       const ALL_APIS = ['nlp'];
 
       function App() {
-        
         const [chatHistory, setChatHistory] = useState([]);
         const [api, setApi] = useState(ALL_APIS[0]);
+        const [loading, setLoading] = useState(false);
         const inputRef = useRef(null);
 
-        const handleAdd = (e) => {
+        const handleAdd = async (e) => {
           e.preventDefault();
-          
           const formData = new FormData(e.target);
           const prompt = formData.get('prompt');
-
-          const init = async () => {
-            try{
-              const response = await fetch(`http://localhost:3000/v1/${api}`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ prompt })
-              });
-
-              const data = await response.json();
-              setChatHistory([...chatHistory, data]);
-
-            } catch (error) {
-              alert('Error al enviar el mensaje');
-            }
+          setLoading(true);
+          
+          try {
+            const response = await fetch(`http://localhost:3000/v1/${api}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt })
+            });
+            const data = await response.json();
+            setChatHistory([...chatHistory, data]);
+          } catch (error) {
+            alert('Error al enviar el mensaje');
           }
-
-          init();
-
+          setLoading(false);
         };
 
-        const handleReset = (e) => {
-          setChatHistory([]);
-        };
+        const handleReset = () => setChatHistory([]);
 
         useEffect(() => {
-          
           const prompt = localStorage.getItem('prompt');
-
-          if (prompt) {
-            inputRef.current.value = prompt;
-          }
-
+          if (prompt) inputRef.current.value = prompt;
         }, []);
 
         return (
           <div className="p-6 rounded-lg shadow-lg text-center flex-1 bg-gray-100 w-full h-full flex-shrink flex gap-6">
-            <form id="promptForm" class="space-y-2 w-full max-w-xs flex-shrink-0 flex flex-col bg-white h-full p-6 rounded-2xl" onSubmit={handleAdd}>
-              
-              <label for="prompt" class="block text-gray-600 font-semibold text-left">Prompt</label>
+            <form className="space-y-2 w-full max-w-xs flex-shrink-0 flex flex-col bg-white h-full p-6 rounded-2xl" onSubmit={handleAdd}>
+              <label className="block text-gray-600 font-semibold text-left">Prompt</label>
               <textarea 
-                id="prompt" name="prompt" 
-                class="border border-gray-300 bg-white text-gray-800 rounded w-full p-2 flex-1" 
+                name="prompt" 
+                className="border border-gray-300 bg-white text-gray-800 rounded w-full p-2 flex-1" 
                 ref={inputRef}
+                required
                 onChange={(e) => localStorage.setItem('prompt', e.target.value)}
-                />
-
-              <label for="apiType" class="block text-gray-600 font-semibold text-left">API</label>
-              <select id="apiType" class="border border-gray-300 bg-white text-gray-800 rounded w-full p-2" required="">
+              />
+              <label className="block text-gray-600 font-semibold text-left">API</label>
+              <select className="border border-gray-300 bg-white text-gray-800 rounded w-full p-2" required>
                 {ALL_APIS.map((api) => (
-                  <option value={api}>{api}</option>
+                  <option key={api} value={api}>{api}</option>
                 ))}
               </select>
-
-              <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded block">
-                Enviar
+              <button type="submit" disabled={loading} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded block">
+                {loading ? 'Cargando...' : 'Enviar'}
               </button>
-              <button type="button" onclick={handleReset} class="w-full bg-blue-900 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded block">
+              <button type="button" disabled={loading} onClick={handleReset} className="w-full bg-blue-900 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded block">
                 Reset
               </button>
-          </form>
-          
-            <div id="jsonPreview" class="flex-1 bg-white rounded-2xl p-6 overflow-y-auto " >
-
-              <pre className="text-left w-full h-full"> 
-                {JSON.stringify(chatHistory, null, 2)}
-              </pre>
-
+            </form>
+            <div className="flex-1 bg-white rounded-2xl p-6 overflow-y-auto">
+              {loading ? <div className=" my-auto h-full w-full mx-auto flex-1  bg-blue-100 rounded-3xl flex justify-center items-center"><p className="text-gray-600 my-auto">Cargando...</p></div> : <pre className="text-left w-full h-full">{JSON.stringify(chatHistory, null, 2)}</pre>}
             </div>
-          
           </div>
         );
       }
@@ -114,14 +86,3 @@
     </script>
   </body>
 </html>
-
-<!-- 
-type role = typeof ROLES[keyof typeof ROLES]
-
-export interface Message {
-    id : string
-    type: string
-    content:| simpleResponse | searchContentResponse | volumeContentResponse | tvCommandContentResponse
-    role: role
-} 
--->
