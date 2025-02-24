@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mi App React</title>
+    <title>FORM - TEST</title>
 
     <!-- CDN para React, ReactDOM y Babel -->
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -14,16 +14,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   
-  <body class="bg-gray-100 flex justify-center items-center h-screen">
+  <body class="flex justify-center items-center h-screen">
 
-    <div id="root"></div>
+    <div class=" w-full h-full flex-1 " id="root"></div>
 
     <script type="text/babel">
-      const { useState } = React;
+      const { useState, useRef, useEffect } = React;
 
       function App() {
         
         const [chatHistory, setChatHistory] = useState([]);
+        const inputRef = useRef(null);
 
         const handleUpdate = (e) => {
           e.preventDefault();
@@ -38,11 +39,43 @@
 
         };
 
+        const handleReset = (e) => {
+          
+
+        };
+
+        useEffect(() => {
+          
+        }, []);
+
         return (
-          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-            <form>
-                
-            </form>
+          <div className="p-6 rounded-lg shadow-lg text-center flex-1 bg-gray-100 w-full h-full flex-shrink flex gap-6">
+            <form id="promptForm" class="space-y-2 w-full max-w-xs flex-shrink-0 flex flex-col bg-white h-full p-6 rounded-2xl" onSubmit={handleUpdate}>
+              <label for="prompt" class="block text-gray-600 font-semibold text-left">Prompt</label>
+              <textarea id="prompt" name="prompt" class="border border-gray-300 bg-white text-gray-800 rounded w-full p-2 flex-1" required=""></textarea>
+              <label for="apiType" class="block text-gray-600 font-semibold text-left">API</label>
+              <select id="apiType" class="border border-gray-300 bg-white text-gray-800 rounded w-full p-2" required="">
+                <option value="final">Final</option>
+                <option value="llama">Llama</option>
+                <option value="nlp">NLP</option>
+              </select>
+
+              <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded block">
+                Enviar
+              </button>
+              <button type="button" onclick={handleReset} class="w-full bg-blue-900 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded block">
+                Reset
+              </button>
+          </form>
+          
+            <div id="jsonPreview" class="flex-1 bg-white rounded-2xl p-6 overflow-y-auto " >
+
+              <pre className="text-left w-full h-full"> 
+                {JSON.stringify(chatHistory, null, 2)}
+              </pre>
+
+            </div>
+          
           </div>
         );
       }
