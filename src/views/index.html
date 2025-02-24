@@ -21,18 +21,36 @@
     <script type="text/babel">
       const { useState, useRef, useEffect } = React;
 
+      const ALL_APIS = ['nlp'];
+
       function App() {
         
         const [chatHistory, setChatHistory] = useState([]);
+        const [api, setApi] = useState(ALL_APIS[0]);
         const inputRef = useRef(null);
 
-        const handleUpdate = (e) => {
+        const handleAdd = (e) => {
           e.preventDefault();
           
+          const formData = new FormData(e.target);
+          const prompt = formData.get('prompt');
+
           const init = async () => {
-            const response = await fetch('http://localhost:3000/api/chat');
-            const data = await response.json();
-            setChatHistory(data);
+            try{
+              const response = await fetch(`http://localhost:3000/v1/${api}`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ prompt })
+              });
+
+              const data = await response.json();
+              setChatHistory([...chatHistory, data]);
+
+            } catch (error) {
+              alert('Error al enviar el mensaje');
+            }
           }
 
           init();
@@ -40,24 +58,36 @@
         };
 
         const handleReset = (e) => {
-          
-
+          setChatHistory([]);
         };
 
         useEffect(() => {
           
+          const prompt = localStorage.getItem('prompt');
+
+          if (prompt) {
+            inputRef.current.value = prompt;
+          }
+
         }, []);
 
         return (
           <div className="p-6 rounded-lg shadow-lg text-center flex-1 bg-gray-100 w-full h-full flex-shrink flex gap-6">
-            <form id="promptForm" class="space-y-2 w-full max-w-xs flex-shrink-0 flex flex-col bg-white h-full p-6 rounded-2xl" onSubmit={handleUpdate}>
+            <form id="promptForm" class="space-y-2 w-full max-w-xs flex-shrink-0 flex flex-col bg-white h-full p-6 rounded-2xl" onSubmit={handleAdd}>
+              
               <label for="prompt" class="block text-gray-600 font-semibold text-left">Prompt</label>
-              <textarea id="prompt" name="prompt" class="border border-gray-300 bg-white text-gray-800 rounded w-full p-2 flex-1" required=""></textarea>
+              <textarea 
+                id="prompt" name="prompt" 
+                class="border border-gray-300 bg-white text-gray-800 rounded w-full p-2 flex-1" 
+                ref={inputRef}
+                onChange={(e) => localStorage.setItem('prompt', e.target.value)}
+                />
+
               <label for="apiType" class="block text-gray-600 font-semibold text-left">API</label>
               <select id="apiType" class="border border-gray-300 bg-white text-gray-800 rounded w-full p-2" required="">
-                <option value="final">Final</option>
-                <option value="llama">Llama</option>
-                <option value="nlp">NLP</option>
+                {ALL_APIS.map((api) => (
+                  <option value={api}>{api}</option>
+                ))}
               </select>
 
               <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded block">
@@ -84,3 +114,14 @@
     </script>
   </body>
 </html>
+
+<!-- 
+type role = typeof ROLES[keyof typeof ROLES]
+
+export interface Message {
+    id : string
+    type: string
+    content:| simpleResponse | searchContentResponse | volumeContentResponse | tvCommandContentResponse
+    role: role
+} 
+-->
