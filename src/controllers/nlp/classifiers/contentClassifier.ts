@@ -1,12 +1,14 @@
 import { ACTIONS } from '@/utils/constants'
 import { BayesClassifier } from 'natural'
 
-const contentClassifier = (classifier: BayesClassifier) => {
-  // ----------- SEARCH CONTENT -----------
+const contentDocuments = [
+  'quero assistir o filme',
+  'quero ver o filme',
+  'coloca o filme '
+]
 
-  classifier.addDocument('quero assistir o filme', ACTIONS.search_content)
-  classifier.addDocument('quero ver o filme', ACTIONS.search_content)
-  classifier.addDocument('coloca o filme ', ACTIONS.search_content)
+const contentClassifier = (classifier: BayesClassifier) => {
+  contentDocuments.forEach(doc => classifier.addDocument(doc, ACTIONS.search_content))
 }
 
 export { contentClassifier }
