@@ -1,4 +1,4 @@
-import { ROLES } from "@/utils/constants"
+import { ACTIONS, ROLES } from "@/utils/constants"
 
 type role = typeof ROLES[keyof typeof ROLES]
 
@@ -9,3 +9,5 @@ export interface Message {
     role: role
 }
 
+
+export type ActionKeys = keyof typeof ACTIONS

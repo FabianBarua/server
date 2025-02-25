@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { nlpController } from './v1/nlp'
+import { nlpController } from '@/controllers/nlp/index'
 
 const router = Router()
 
