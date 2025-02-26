@@ -8,7 +8,7 @@ export const ROLES = {
     system: 'system'
 }
 
-export const ACTIONS = {
+export const ACTIONS  = {
     simple_response: 'simple_response',
     search_content: 'search_content',
     get_time_or_date: 'get_time_or_date',
@@ -16,5 +16,7 @@ export const ACTIONS = {
     set_volume: 'set_volume',
     send_comand_tv: 'send_comand_tv',
     get_nearest_game_for_team: 'get_nearest_game_for_team',
-    ia_response: 'ia_response'
+    get_nearest_game_for_2_teams: 'get_nearest_game_for_2_teams',
+    ia_response: 'ia_response',
+    web_search: 'web_search'
 }

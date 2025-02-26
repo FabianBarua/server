@@ -113,7 +113,7 @@ const frenchTeams = [
 
 const spanishTeams = [
   { id: "barcelona", name: "Barcelona", synonyms: [] },
-  { id: "real-madrid", name: "Real Madrid", synonyms: [] },
+  { id: "real-madrid", name: "Real Madrid", synonyms: ['madrid'] },
   { id: "atletico-madrid", name: "Atlético Madrid", synonyms: [] },
   { id: "villarreal", name: "Villarreal", synonyms: [] },
   { id: "osasuna", name: "Osasuna", synonyms: [] },

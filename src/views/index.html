@@ -16,7 +16,7 @@
 
     <script type="text/babel">
       const { useState, useRef, useEffect } = React;
-      const ALL_APIS = ['nlp'];
+      const ALL_APIS = ['ia', 'nlp'];
 
       function App() {
         const [chatHistory, setChatHistory] = useState([]);
@@ -30,16 +30,39 @@
           const prompt = formData.get('prompt');
           setLoading(true);
           
+          const newChatHistory = [...chatHistory, 
+            { 
+              id: null,
+              role: 'user',
+              type: 'simple_response',
+              content:{
+                answer: prompt
+              }
+
+            }];
+            
+
           try {
             const response = await fetch(`http://localhost:3000/v1/${api}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ prompt })
+              body: JSON.stringify(
+                {
+                  chatHistory: newChatHistory
+                }
+              )
             });
             const data = await response.json();
-            setChatHistory([...chatHistory, data]);
+
+            // chatHistory[chatHistory.length - 1].id = data.userMessage.id | null
+
+            setChatHistory([
+              ...newChatHistory,
+              data.message
+            ]);
+            
           } catch (error) {
-            alert('Error al enviar el mensaje');
+            alert(error);
           }
           setLoading(false);
         };
@@ -63,7 +86,9 @@
                 onChange={(e) => localStorage.setItem('prompt', e.target.value)}
               />
               <label className="block text-gray-600 font-semibold text-left">API</label>
-              <select className="border border-gray-300 bg-white text-gray-800 rounded w-full p-2" required>
+              <select className="border border-gray-300 bg-white text-gray-800 rounded w-full p-2" required
+                onChange={(e) => setApi(e.target.value)}
+              >
                 {ALL_APIS.map((api) => (
                   <option key={api} value={api}>{api}</option>
                 ))}
@@ -76,7 +101,7 @@
               </button>
             </form>
             <div className="flex-1 bg-white rounded-2xl p-6 overflow-y-auto">
-              {loading ? <div className=" my-auto h-full w-full mx-auto flex-1  bg-blue-100 rounded-3xl flex justify-center items-center"><p className="text-gray-600 my-auto">Cargando...</p></div> : <pre className="text-left w-full h-full">{JSON.stringify(chatHistory, null, 2)}</pre>}
+              {loading ? <div className=" my-auto h-full w-full mx-auto flex-1  bg-blue-100 rounded-3xl flex justify-center items-center"><p className="text-gray-600 my-auto">Cargando...</p></div> : <pre className="text-left w-full h-full whitespace-pre-wrap break-words">{JSON.stringify(chatHistory, null, 2)}</pre>}
             </div>
           </div>
         );
