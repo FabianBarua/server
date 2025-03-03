@@ -1,5 +1,6 @@
 import { allExtractors } from "@/controllers/nlp/extractors";
 import { ACTIONS, ROLES } from "@/utils/constants";
+import { Message as OllamaMessage } from "ollama";
 
 type role = (typeof ROLES)[keyof typeof ROLES];
 
@@ -8,6 +9,7 @@ export interface Message {
   type: string;
   content:
     | simpleResponse
+    | web_searchResponse
     | searchContentResponse
     | MovieSeriesSearchType
     | volumeContentResponse
@@ -27,6 +29,14 @@ export interface teamMatchQueryParams {
   team: team;
 }
 
+export type userMessage = {
+  id: string;
+  content: simpleResponse
+  type: ActionKeys;
+  role: role;
+} | null;
+
+
 export interface paramsInterface {
   entity?: string;
   teams?: team[];
@@ -35,6 +45,17 @@ export interface paramsInterface {
   keywords?: string;
   volume?: string | null;
   command?: string | null;
+  answer?: string;
+  userPrompt?: string;
+  chatHistory?: OllamaMessage[];
+  messageUUID?: string;
+  res?: Response
+  userMessage?: userMessage;
+}
+
+export interface streamResponseInterface {
+  name: ActionKeys;
+  parameters: paramsInterface
 }
 
 export interface executeActionParams {
@@ -46,12 +67,23 @@ export interface executeActionParams {
 
 import { SearchResponse } from "meilisearch";
 import { Tool } from "ollama";
+import { Response } from "express";
 
 // ------- RESPONSES -------
 
 export interface simpleResponse {
   answer: string;
 }
+
+export interface web_searchResponse {
+  answer: string;
+  webs: {
+    title: string;
+    url: string;
+    description: string;
+  }[]
+}
+
 export interface searchContentResponse extends SearchResponse {}
 
 export interface MovieSeriesSearchType extends Tool {}

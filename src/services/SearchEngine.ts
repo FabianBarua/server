@@ -191,33 +191,55 @@ function extraerDatos(html: string) {
   }
 }
 
-export async function SearchEngine({ query, pages }: { query: string, pages:number }): Promise<string> {
-  try {
-    const results = await search({
-      term: query,
-      num_results: pages,
-      advanced: true,
-      lang: "pt-BR", region: "BR"
-    });
-    // filter results with url
-    const validResultUrls = results.filter((result) => "url" in result);
-    let data = "";
-    for (const info of validResultUrls) {
-      const html = await _req({ urlBase: info.url });
-      const { title, description, text } = extraerDatos(html);
-
-      data += `-------------------------------------
-URL: ${info.url}
-TITLE: ${title}
-DESCRIPTION: ${description || info.description}
--------------------------------------
-${text}
-`;
-    }
-
-    return data;
-  } catch (error) {
-    console.error("Error in getData:", error);
-    return "sem resultados para a pesquisa";
-  }
+export interface SearchEngineResponse {
+    url: string;
+    title: string;
+    description: string;
+    text: string;
 }
+
+export async function* SearchEngineStream({ query, pages }: { query: string; pages: number }): AsyncGenerator<SearchEngineResponse> {
+    try {
+      const results = await search({
+        term: query,
+        num_results: pages,
+        advanced: true,
+        lang: "pt-BR",
+        region: "BR",
+      });
+
+      yield {
+        url: "https://www.google.com/search?q=" + encodeURIComponent(query),
+        title: "Resultados da pesquisa",
+        description: "Resultados da pesquisa",
+        text: results.map((result) => result.title).join("\n"),
+      }
+  
+      const validResultUrls = results.filter((result) => "url" in result);
+  
+      for (const info of validResultUrls) {
+        try {
+          const html = await _req({ urlBase: info.url });
+          const { title, description, text } = extraerDatos(html);
+  
+          yield {
+            url: info.url,
+            title,
+            description: description || info.description,
+            text,
+          };
+        } catch (err) {
+          console.error(`Erro ao buscar ${info.url}:`, err);
+        }
+      }
+    } catch (error) {
+      console.error("Erro em SearchEngineStream:", error);
+      yield {
+        url: "",
+        title: "Erro",
+        description: "Sem resultados",
+        text: "Sem resultados",
+      };
+    }
+}
+  

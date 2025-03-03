@@ -31,6 +31,7 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "iconv-lite": "^0.6.3",
+    "jsonrepair": "^3.12.0",
     "meilisearch": "^0.49.0",
     "natural": "^8.0.1",
     "node-nlp": "5.0.0-alpha.5",

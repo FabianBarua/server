@@ -19,95 +19,105 @@
       const ALL_APIS = ['ia', 'nlp'];
 
       function App() {
-        const [chatHistory, setChatHistory] = useState([]);
-        const [api, setApi] = useState(ALL_APIS[0]);
-        const [loading, setLoading] = useState(false);
-        const inputRef = useRef(null);
+  const [messages, setMessages] = useState([]);
 
-        const handleAdd = async (e) => {
-          e.preventDefault();
-          const formData = new FormData(e.target);
-          const prompt = formData.get('prompt');
-          setLoading(true);
-          
-          const newChatHistory = [...chatHistory, 
-            { 
-              id: null,
-              role: 'user',
-              type: 'simple_response',
-              content:{
-                answer: prompt
-              }
+  const fetchData = async () => {
+    const response = await fetch("http://localhost:3000/v1/ia", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        "chatHistory" : [
+            {
+                "id": null,
+                "type": "simple_response",
+                "content": {
+                    "answer":"que hora e"
+                },
+                "role" : "user"
+            }
+        ]
+    }),
+    });
 
-            }];
-            
+    
+    // Check if response is a stream
+    if (response.body && response.body.getReader) {
+      console.log("Streaming response detected...");
+      return handleStream(response);
+    }
 
+    console.log("Normal fetch response detected...");
+    return handleNormalResponse(response);
+  };
+
+  // Handle streaming response
+  const handleStream = async (response) => {
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let newMessages = [];
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value, { stream: true });
+
+      chunk.split("\n\n").forEach((line) => {
+        if (line.startsWith("data: ")) {
           try {
-            const response = await fetch(`http://localhost:3000/v1/${api}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(
-                {
-                  chatHistory: newChatHistory
-                }
-              )
-            });
-            const data = await response.json();
+            const jsonData = JSON.parse(line.replace("data: ", ""));
 
-            // chatHistory[chatHistory.length - 1].id = data.userMessage.id | null
+            // Ensure we extract a string from the expected object structure
+            const messageContent = (jsonData && jsonData.message && jsonData.message.content) 
+            ? jsonData.message.content 
+            : (jsonData && jsonData.message) 
+            ? jsonData.message 
+            : "No message";
 
-            setChatHistory([
-              ...newChatHistory,
-              data.message
-            ]);
-            
-          } catch (error) {
-            alert(error);
+            newMessages.push(messageContent);
+            setMessages([...newMessages]);
+          } catch (err) {
+            console.error("Error parsing JSON", err);
           }
-          setLoading(false);
-        };
+        }
+      });
+    }
+  };
 
-        const handleReset = () => setChatHistory([]);
+  // Handle normal fetch response (JSON)
+  const handleNormalResponse = async (response) => {
+    try {
+      const data = await response.json();
 
-        useEffect(() => {
-          const prompt = localStorage.getItem('prompt');
-          if (prompt) inputRef.current.value = prompt;
-        }, []);
+      // Ensure we extract only string content for rendering
+      const messageContent = (data && data.message && data.message.content) 
+        ? data.message.content 
+        : (data && data.message) 
+        ? data.message 
+        : "No message";
 
-        return (
-          <div className="p-6 rounded-lg shadow-lg text-center flex-1 bg-gray-100 w-full h-full flex-shrink flex gap-6">
-            <form className="space-y-2 w-full max-w-xs flex-shrink-0 flex flex-col bg-white h-full p-6 rounded-2xl" onSubmit={handleAdd}>
-              <label className="block text-gray-600 font-semibold text-left">Prompt</label>
-              <textarea 
-                name="prompt" 
-                className="border border-gray-300 bg-white text-gray-800 rounded w-full p-2 flex-1" 
-                ref={inputRef}
-                required
-                onChange={(e) => localStorage.setItem('prompt', e.target.value)}
-              />
-              <label className="block text-gray-600 font-semibold text-left">API</label>
-              <select className="border border-gray-300 bg-white text-gray-800 rounded w-full p-2" required
-                onChange={(e) => setApi(e.target.value)}
-              >
-                {ALL_APIS.map((api) => (
-                  <option key={api} value={api}>{api}</option>
-                ))}
-              </select>
-              <button type="submit" disabled={loading} className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded block">
-                {loading ? 'Cargando...' : 'Enviar'}
-              </button>
-              <button type="button" disabled={loading} onClick={handleReset} className="w-full bg-blue-900 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded block">
-                Reset
-              </button>
-            </form>
-            <div className="flex-1 bg-white rounded-2xl p-6 overflow-y-auto">
-              {loading ? <div className=" my-auto h-full w-full mx-auto flex-1  bg-blue-100 rounded-3xl flex justify-center items-center"><p className="text-gray-600 my-auto">Cargando...</p></div> : <pre className="text-left w-full h-full whitespace-pre-wrap break-words">{JSON.stringify(chatHistory, null, 2)}</pre>}
-            </div>
-          </div>
-        );
-      }
+      setMessages([messageContent]);
+    } catch (err) {
+      console.error("Error parsing normal response", err);
+    }
+  };
+
+  return (
+    <div>
+      <button onClick={fetchData}>Fetch Data</button>
+      <div>
+        {messages.map((msg, index) => (
+          <p key={index}>{typeof msg === "string" ? msg : JSON.stringify(msg)}</p>
+        ))}
+      </div>
+    </div>
+  );
+};
 
       ReactDOM.render(<App />, document.getElementById('root'));
+
     </script>
   </body>
 </html>
